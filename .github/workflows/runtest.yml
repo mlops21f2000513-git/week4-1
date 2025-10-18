@@ -50,8 +50,6 @@ jobs:
         run: |
           echo "test output" > report.md
           echo "\`\`\`" >> report.md
-          #cat test_output.txt >> report.md
+          cat test_output.txt >> report.md
           echo "\`\`\`" >> report.md
-          echo "metrics from training" >> report.md
-          #echo metrics.csv >> report.md
           cml comment create --publish report.md
