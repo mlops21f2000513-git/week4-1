@@ -14,20 +14,19 @@ class TestPipeline(unittest.TestCase):
         It ensures DVC data is pulled from Google Cloud Storage (GCS).
         Works in GitHub Actions with authentication via GCP service account.
         """
-        print("\n🔄 Setting up DVC + GCS for data pull...")
+        print("\nSetting up DVC + GCS for data pull...")
 
         # Expect GOOGLE_APPLICATION_CREDENTIALS JSON content to be in env variable
         gcp_key = os.getenv("GCP_SA_KEY")
         if not gcp_key:
             raise EnvironmentError(
-                "❌ Missing GCP_SA_KEY environment variable (add it to GitHub secrets)."
+                "Missing GCP_SA_KEY environment variable (add it to GitHub secrets)."
             )
 
         # Write the service account key to a temporary file
         key_path = "gcp-key.json"
         with open(key_path, "w") as f:
             f.write(gcp_key)
-        print("✅ Wrote GCP service account credentials.")
 
         # Authenticate gcloud CLI (optional but safe)
         subprocess.run(
@@ -35,28 +34,19 @@ class TestPipeline(unittest.TestCase):
             check=True,
         )
 
-        # Ensure DVC remote is configured for GCS
-        remote_name = "gcs-storage"
-        gcs_url = os.getenv("DVC_REMOTE_URL", "gs://my-dvc-bucket/data")  # fallback
+        # Tell DVC and GCS which credentials to use
+        os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = key_path
 
-        subprocess.run(
-            ["dvc", "remote", "add", "-f", remote_name, gcs_url],
-            check=False,
-        )
-        subprocess.run(
-            ["dvc", "remote", "modify", remote_name, "credentialpath", key_path],
-            check=False,
-        )
-
-        print(f"✅ Configured DVC remote: {gcs_url}")
-
-        # Pull data from GCS via DVC
+        # Verify the account
+        subprocess.run(["gcloud", "auth", "list"], check=True)
+        
+        # Pull data using DVC
+        print("Running 'dvc pull' ...")
         result = subprocess.run(["dvc", "pull"], capture_output=True, text=True)
         if result.returncode != 0:
             print("❌ DVC pull failed!")
             print(result.stderr)
             raise RuntimeError(f"DVC pull failed:\n{result.stderr}")
-
         print("✅ DVC data successfully pulled.")
 
 
