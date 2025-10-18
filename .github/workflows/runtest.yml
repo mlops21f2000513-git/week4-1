@@ -1,0 +1,57 @@
+name: Run unit tests with DVC data
+
+on:
+  push:
+    branches:
+      - '**'
+  pull_request:
+    branches:
+      - '**'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  test_model:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-python@v4
+        with:
+          python-version: "3.9"
+      - uses: iterative/setup-cml@v2
+
+      - name: Install dependencies
+        run: |
+          pip install -r requirements.txt
+          pip install dvc[gcs] google-cloud-storage
+
+      - name: Setup GCP auth
+        env:
+          GCP_SA_KEY: ${{ secrets.GCP_SA_KEY }}
+        run: |
+          echo "$GCP_SA_KEY" > gcp_key.json
+          gcloud auth activate-service-account --key-file=gcp_key.json
+
+
+      - name: Run tests
+        env:
+          GCP_SA_KEY: ${{ secrets.GCP_SA_KEY }}
+          DVC_REMOTE_URL: gs://your-dvc-bucket/data
+
+        run: |
+          python -m unittest discover -v 2>&1 | tee test_output.txt
+
+      - name: Create CML report
+        env:
+          REPO_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          echo "test output" > report.md
+          echo "\`\`\`" >> report.md
+          #cat test_output.txt >> report.md
+          echo "\`\`\`" >> report.md
+          echo "metrics from training" >> report.md
+          #echo metrics.csv >> report.md
+          cml comment create --publish report.md
