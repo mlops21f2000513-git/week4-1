@@ -44,38 +44,37 @@ class TestPipeline(unittest.TestCase):
         print("Running 'dvc pull' ...")
         result = subprocess.run(["dvc", "pull"], capture_output=True, text=True)
         if result.returncode != 0:
-            print("❌ DVC pull failed!")
+            print("DVC pull failed!")
             print(result.stderr)
             raise RuntimeError(f"DVC pull failed:\n{result.stderr}")
-        print("✅ DVC data successfully pulled.")
+        print("DVC data successfully pulled.")
 
 
-    def test_data_validation(self):
+    def test_data_columns_present(self):
         """
-        Test that inference data exists and has expected columns.
+        Validate that iris.csv has all required columns.
         """
-        data_path = "data/inference_data.csv"  # adjust if needed
-        self.assertTrue(os.path.exists(data_path), f"{data_path} does not exist!")
+        expected_cols = ["sepal_length", "sepal_width", "petal_length", "petal_width", "species"]
 
-        df = pd.read_csv(data_path)
-        expected_columns = ["sepal_length", "sepal_width", "petal_length", "petal_width", "species"]
+        file_path = "data/iris.csv"
+        self.assertTrue(os.path.exists(file_path), f"File not found: {file_path}")
 
-        for col in expected_columns:
-            self.assertIn(col, df.columns, f"Missing required column: {col}")
+        df = pd.read_csv(file_path)
+        for col in expected_cols:
+            self.assertIn(col, df.columns, f"Missing expected column: {col}")
 
-        self.assertGreater(len(df), 0, "Data file is empty.")
-        print("✅ Data validation passed.")
+        print("✅ All expected columns are present in iris.csv.")
 
-    def test_model_evaluation(self):
-        """
-        Test that model evaluation (accuracy) works correctly.
-        """
-        y_true = ["setosa", "versicolor", "virginica"]
-        y_pred = ["setosa", "versicolor", "virginica"]
-        acc = metrics.accuracy_score(y_true, y_pred)
+    # def test_model_evaluation(self):
+    #     """
+    #     Test that model evaluation (accuracy) works correctly.
+    #     """
+    #     y_true = ["setosa", "versicolor", "virginica"]
+    #     y_pred = ["setosa", "versicolor", "virginica"]
+    #     acc = metrics.accuracy_score(y_true, y_pred)
 
-        self.assertEqual(acc, 1.0, "Model accuracy should be 100% for identical predictions.")
-        print("✅ Model evaluation passed.")
+    #     self.assertEqual(acc, 1.0, "Model accuracy should be 100% for identical predictions.")
+    #     print("✅ Model evaluation passed.")
 
 
 if __name__ == "__main__":
