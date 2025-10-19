@@ -40,7 +40,6 @@ jobs:
         env:
           GCP_SA_KEY: ${{ secrets.GCP_SA_KEY }}
           DVC_REMOTE_URL: gs://mlops-week1-operating-edge-473204-j5/week4/data
-
         run: |
           python -m unittest discover -v 2>&1 | tee test_output.txt
 
