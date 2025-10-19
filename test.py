@@ -1,7 +1,7 @@
 import unittest
 import subprocess
 import pandas as pd
-from sklearn import metrics
+from sklearn.metrics import accuracy_score
 import os
 import joblib
 
@@ -54,6 +54,7 @@ class TestPipeline(unittest.TestCase):
         """
         Validate that iris.csv has all required columns.
         """
+        print("Data validation for iris_inference dataset downloaded from dvc")
         expected_cols = ["sepal_length", "sepal_width", "petal_length", "petal_width", "species"]
 
         file_path = "data/iris_inference.csv"
@@ -69,8 +70,9 @@ class TestPipeline(unittest.TestCase):
         """
         Loads model.joblib and iris.csv, runs inference, and checks predictions.
         """
+        print("Model evaluation on iris_inference dataset downloaded from dvc")
         model_path = "model.joblib"
-        data_path = "data/iris_inference.csv"  # use verified file from test 1
+        data_path = "data/iris_inference.csv"
 
         # Check that files exist
         self.assertTrue(os.path.exists(model_path), f"❌ Model file not found: {model_path}")
@@ -84,12 +86,14 @@ class TestPipeline(unittest.TestCase):
 
         # Run inference
         predictions = model.predict(X_test)
+        accuracy = accuracy_score(y_test, predictions)
 
         # Basic checks
         self.assertEqual(len(predictions), len(y_test), "❌ Number of predictions does not match number of samples")
         self.assertTrue(len(predictions) > 0, "❌ Predictions array is empty")
 
         print(f"✅ Model evaluation successful: {len(predictions)} predictions generated.")
+        print(f"📊 Model Accuracy: {accuracy:.3f}")
 
 
 if __name__ == "__main__":
