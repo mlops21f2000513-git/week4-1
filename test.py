@@ -1,9 +1,9 @@
 import unittest
 import subprocess
 import pandas as pd
-from sklearn import metrics
+from sklearn.metrics import accuracy_score
 import os
-import json
+import joblib
 
 class TestPipeline(unittest.TestCase):
 
@@ -54,9 +54,10 @@ class TestPipeline(unittest.TestCase):
         """
         Validate that iris.csv has all required columns.
         """
+        print("Data validation for iris_inference dataset downloaded from dvc")
         expected_cols = ["sepal_length", "sepal_width", "petal_length", "petal_width", "species"]
 
-        file_path = "data/iris.csv"
+        file_path = "data/iris_inference.csv"
         self.assertTrue(os.path.exists(file_path), f"File not found: {file_path}")
 
         df = pd.read_csv(file_path)
@@ -65,16 +66,34 @@ class TestPipeline(unittest.TestCase):
 
         print("✅ All expected columns are present in iris.csv.")
 
-    # def test_model_evaluation(self):
-    #     """
-    #     Test that model evaluation (accuracy) works correctly.
-    #     """
-    #     y_true = ["setosa", "versicolor", "virginica"]
-    #     y_pred = ["setosa", "versicolor", "virginica"]
-    #     acc = metrics.accuracy_score(y_true, y_pred)
+    def test_model_evaluation(self):
+        """
+        Loads model.joblib and iris.csv, runs inference, and checks predictions.
+        """
+        print("Model evaluation on iris_inference dataset downloaded from dvc")
+        model_path = "model.joblib"
+        data_path = "data/iris_inference.csv"
 
-    #     self.assertEqual(acc, 1.0, "Model accuracy should be 100% for identical predictions.")
-    #     print("✅ Model evaluation passed.")
+        # Check that files exist
+        self.assertTrue(os.path.exists(model_path), f"❌ Model file not found: {model_path}")
+        self.assertTrue(os.path.exists(data_path), f"❌ Data file not found: {data_path}")
+
+        # Load model and data
+        model = joblib.load(model_path)
+        df = pd.read_csv(data_path)
+        X_test = df[['sepal_length','sepal_width','petal_length','petal_width']]
+        y_test = df.species
+
+        # Run inference
+        predictions = model.predict(X_test)
+        accuracy = accuracy_score(y_test, predictions)
+
+        # Basic checks
+        self.assertEqual(len(predictions), len(y_test), "❌ Number of predictions does not match number of samples")
+        self.assertTrue(len(predictions) > 0, "❌ Predictions array is empty")
+
+        print(f"✅ Model evaluation successful: {len(predictions)} predictions generated.")
+        print(f"📊 Model Accuracy: {accuracy:.3f}")
 
 
 if __name__ == "__main__":
